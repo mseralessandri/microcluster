@@ -18,7 +18,7 @@ defaults:
 
 jobs:
   trivy-repo:
-    name: Trivy vulnerability scanner - Repository
+    name: Trivy - Repository
     runs-on: ubuntu-22.04
     strategy:
       matrix:
