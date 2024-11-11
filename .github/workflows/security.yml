@@ -18,7 +18,7 @@ defaults:
 
 jobs:
   trivy-repo:
-    name: Trivy vulnerability scanner - Repository
+    name: Trivy - Repository
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -31,13 +31,36 @@ jobs:
         with:
           ref: ${{ matrix.version }}
 
-      - name: Run Trivy vulnerability scanner in repo mode
-        uses: aquasecurity/trivy-action@master
+      - name: Install Trivy
+        uses: canonical/lxd/.github/actions/install-trivy@main
+
+      - name: Download Trivy DB
+        id: db_download
+        run: trivy fs --download-db-only --cache-dir /home/runner/vuln-cache
+        continue-on-error: true
+
+      - name: Use previous downloaded database
+        if: ${{ steps.db_download.outcome == 'failure' }}
+        uses: actions/cache/restore@3624ceb22c1c5a301c8db4169662070a689d9ea8 # v4.1.1
         with:
-          scan-type: "fs"
-          format: "sarif"
-          output: "trivy-microcluster-repo-scan-results.sarif"
-          severity: "LOW,MEDIUM,HIGH,CRITICAL"
+          path: /home/runner/vuln-cache
+          key: trivy-latest-cache
+
+      - name: Run Trivy vulnerability scanner
+        run: |
+          trivy fs --skip-db-update \
+          --scanners vuln,secret,misconfig \
+          --format sarif \
+          --cache-dir /home/runner/vuln-cache \
+          --severity LOW,MEDIUM,HIGH,CRITICAL \
+          --output trivy-microcluster-repo-scan-results.sarif .
+
+      - name: Cache Trivy vulnerability database
+        if: ${{ steps.db_download.outcome == 'success' }}
+        uses: actions/cache/save@3624ceb22c1c5a301c8db4169662070a689d9ea8 # v4.1.1
+        with:
+          path: /home/runner/vuln-cache
+          key: trivy-latest-cache
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
