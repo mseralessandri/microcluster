@@ -54,7 +54,7 @@ jobs:
       - name: Install Trivy
         uses: canonical/lxd/.github/actions/install-trivy@main
 
-      - name: Use previous downloaded database
+      - name: Use previously downloaded database
         uses: actions/cache/restore@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
         with:
           path: /home/runner/vuln-cache
