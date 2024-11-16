@@ -53,6 +53,20 @@ func validateRemoteName(name string) error {
 	return nil
 }
 
+// remoteYamlPath returns the path to the remote's YAML file. The path is checked to ensure it is within the given directory.
+func remoteYamlPath(dir, name string) (string, error) {
+	path, err := filepath.Abs(filepath.Join(dir, name+".yaml"))
+	if err != nil {
+		return "", fmt.Errorf("Failed to get absolute path to %q yaml: %w", name, err)
+	}
+
+	if !strings.HasPrefix(path, dir) {
+		return "", fmt.Errorf("Invalid path to %q yaml", name)
+	}
+
+	return path, nil
+}
+
 // Load reads any yaml files in the given directory and parses them into a set of Remotes.
 func (r *Remotes) Load(dir string) error {
 	r.updateMu.Lock()
@@ -126,7 +140,11 @@ func (r *Remotes) Add(dir string, remotes ...Remote) error {
 			return fmt.Errorf("Failed to parse remote %q to yaml: %w", remote.Name, err)
 		}
 
-		path := filepath.Join(dir, filepath.Base(remote.Name+".yaml"))
+		path, err := remoteYamlPath(dir, remote.Name)
+		if err != nil {
+			return err
+		}
+
 		_, err = os.Stat(path)
 		if err == nil {
 			return fmt.Errorf("Remote at %q already exists", path)
@@ -173,7 +191,11 @@ func (r *Remotes) Replace(dir string, newRemotes ...types.ClusterMember) error {
 			return fmt.Errorf("Failed to parse remote %q to yaml: %w", remote.Name, err)
 		}
 
-		remotePath := filepath.Join(dir, filepath.Base(remote.Name+".yaml"))
+		remotePath, err := remoteYamlPath(dir, remote.Name)
+		if err != nil {
+			return err
+		}
+
 		err = renameio.WriteFile(remotePath, bytes, 0644)
 		if err != nil {
 			return fmt.Errorf("Failed to write %q: %w", remotePath, err)
@@ -197,7 +219,11 @@ func (r *Remotes) Replace(dir string, newRemotes ...types.ClusterMember) error {
 		_, ok := remoteData[name]
 
 		if !ok {
-			remotePath := filepath.Join(dir, filepath.Base(entry.Name()))
+			remotePath, err := remoteYamlPath(dir, name)
+			if err != nil {
+				return err
+			}
+
 			err = os.Remove(remotePath)
 			if err != nil {
 				return err
