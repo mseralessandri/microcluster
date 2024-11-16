@@ -39,6 +39,20 @@ type Location struct {
 	Address types.AddrPort `yaml:"address"`
 }
 
+// disallowedFileNameSubcontents contains the list of disallowed substrings in remote names.
+var disallowedFilenameSubcontents = []string{"..", "/", "\\"}
+
+// validateRemoteName checks if the remote name contains any disallowed substrings.
+func validateRemoteName(name string) error {
+	for _, disallowed := range disallowedFilenameSubcontents {
+		if strings.Contains(name, disallowed) {
+			return fmt.Errorf("Invalid remote name %q. Contains illegal subcontent %q", name, disallowed)
+		}
+	}
+
+	return nil
+}
+
 // Load reads any yaml files in the given directory and parses them into a set of Remotes.
 func (r *Remotes) Load(dir string) error {
 	r.updateMu.Lock()
@@ -95,6 +109,11 @@ func (r *Remotes) Add(dir string, remotes ...Remote) error {
 	for _, remote := range remotes {
 		if remote.Certificate.Certificate == nil {
 			return fmt.Errorf("Failed to parse local record %q. Found empty certificate", remote.Name)
+		}
+
+		err := validateRemoteName(remote.Name)
+		if err != nil {
+			return err
 		}
 
 		_, ok := r.data[remote.Name]
