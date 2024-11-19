@@ -7,6 +7,10 @@ on:
     - cron: '0 0 * * *'  # Test TICS daily
 
 env:
+  CGO_CFLAGS: -I/home/runner/go/deps/dqlite/include/
+  CGO_LDFLAGS: -L/home/runner/go/deps/dqlite/.libs/
+  LD_LIBRARY_PATH: /home/runner/go/deps/dqlite/.libs/
+  CGO_LDFLAGS_ALLOW: (-Wl,-wrap,pthread_create)|(-Wl,-z,now)
   GOCOVERDIR: ${{ ( github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' ) && '/home/runner/work/microcluster/microcluster/cover' || '' }}
 
 permissions:
@@ -18,11 +22,6 @@ concurrency:
 
 jobs:
   code-tests:
-    env:
-      CGO_CFLAGS: -I/home/runner/go/deps/dqlite/include/
-      CGO_LDFLAGS: -L/home/runner/go/deps/dqlite/.libs/
-      LD_LIBRARY_PATH: /home/runner/go/deps/dqlite/.libs/
-      CGO_LDFLAGS_ALLOW: (-Wl,-wrap,pthread_create)|(-Wl,-z,now)
     name: Code
     runs-on: ubuntu-22.04
     strategy:
