@@ -17,20 +17,10 @@ defaults:
     shell: bash
 
 jobs:
-  trivy-repo:
-    name: Trivy - Repository
+  update-vulnerability-database:
+    name: Trivy - Update cached database
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        version:
-          - v3
-          - v2
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ matrix.version }}
-
       - name: Install Trivy
         uses: canonical/lxd/.github/actions/install-trivy@main
 
@@ -39,12 +29,38 @@ jobs:
         run: trivy fs --download-db-only --cache-dir /home/runner/vuln-cache
         continue-on-error: true
 
-      - name: Use previous downloaded database
-        if: ${{ steps.db_download.outcome == 'failure' }}
+      - name: Cache Trivy vulnerability database
+        if: ${{ steps.db_download.outcome == 'success' }}
+        uses: actions/cache/save@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
+        with:
+          path: /home/runner/vuln-cache
+          key: trivy-cache-${{ github.run_id }}
+
+  trivy-repo:
+    name: Trivy - Repository
+    runs-on: ubuntu-22.04
+    needs: update-vulnerability-database
+    strategy:
+      matrix:
+        version:
+          - v3
+          - v2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ matrix.version }}
+
+      - name: Install Trivy
+        uses: canonical/lxd/.github/actions/install-trivy@main
+
+      - name: Use previously downloaded database
         uses: actions/cache/restore@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
         with:
           path: /home/runner/vuln-cache
-          key: trivy-latest-cache
+          key: trivy-cache-${{ github.run_id }}
+          restore-keys: |
+            trivy-cache-
 
       - name: Run Trivy vulnerability scanner
         run: |
@@ -55,15 +71,8 @@ jobs:
           --severity LOW,MEDIUM,HIGH,CRITICAL \
           --output trivy-microcluster-repo-scan-results.sarif .
 
-      - name: Cache Trivy vulnerability database
-        if: ${{ steps.db_download.outcome == 'success' }}
-        uses: actions/cache/save@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
-        with:
-          path: /home/runner/vuln-cache
-          key: trivy-latest-cache
-
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@4f3212b61783c3c68e8309a0f18a699764811cda # v3.27.1
         with:
           sarif_file: "trivy-microcluster-repo-scan-results.sarif"
           sha: ${{ github.sha }}
