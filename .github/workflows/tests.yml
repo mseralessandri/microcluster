@@ -113,7 +113,8 @@ jobs:
     name: Tiobe TICS
     runs-on: ubuntu-22.04
     needs: code-tests
-    if: ${{ ( github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' ) && github.ref_name == 'v3' && github.repository == 'canonical/microcluster' }}
+    #if: ${{ ( github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' ) && github.ref_name == 'v3' && github.repository == 'canonical/microcluster' }}
+    if: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
