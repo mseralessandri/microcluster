@@ -121,7 +121,7 @@ func RecoverFromQuorumLoss(filesystem *sys.OS, members []cluster.DqliteMember) (
 	cancelCtx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	err = cluster.Query(cancelCtx, true, func(ctx context.Context, client *client.Client) error {
 		var rslt internalTypes.Server
-		err := client.Query(ctx, "GET", "1.0", api.NewURL(), nil, &rslt)
+		err := client.Query(ctx, "GET", internalTypes.PublicEndpoint, api.NewURL(), nil, &rslt)
 		if err == nil {
 			return fmt.Errorf("Contacted cluster member at %q; please shut down all cluster members", rslt.Name)
 		}
