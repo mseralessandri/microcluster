@@ -73,14 +73,14 @@ func (db *DqliteDB) Accept(conn net.Conn) {
 }
 
 // NewDB creates an empty db struct with no dqlite connection.
-func NewDB(ctx context.Context, serverCert func() *shared.CertInfo, clusterCert func() *shared.CertInfo, memberName func() string, os *sys.OS, heartbeatInterval time.Duration) *DqliteDB {
+func NewDB(ctx context.Context, serverCert func() *shared.CertInfo, clusterCert func() *shared.CertInfo, memberName func() string, os *sys.OS, heartbeatInterval time.Duration) (*DqliteDB, error) {
 	shutdownCtx, shutdownCancel := context.WithCancel(ctx)
 
 	if heartbeatInterval == 0 {
 		heartbeatInterval = DefaultHeartbeatInterval
 	}
 
-	return &DqliteDB{
+	db := &DqliteDB{
 		memberName:        memberName,
 		serverCert:        serverCert,
 		clusterCert:       clusterCert,
@@ -94,6 +94,17 @@ func NewDB(ctx context.Context, serverCert func() *shared.CertInfo, clusterCert 
 		status:            types.DatabaseNotReady,
 		maxConns:          1,
 	}
+
+	initialized, err := db.isInitialized()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to check if database is initialized: %w", err)
+	}
+
+	if initialized {
+		db.status = types.DatabaseStarting
+	}
+
+	return db, nil
 }
 
 // SetSchema sets schema and API extensions on the DB.
@@ -111,6 +122,19 @@ func (db *DqliteDB) Schema() *update.SchemaUpdate {
 // SchemaVersion returns the current internal and external schema version, as well as all API extensions in memory.
 func (db *DqliteDB) SchemaVersion() (versionInternal uint64, versionExternal uint64, apiExtensions extensions.Extensions) {
 	return db.schema.Version()
+}
+
+// isInitialized determines whether the database has been bootstrapped or joined to a cluster.
+// This is an internal helper function; external callers should use Status() instead.
+func (db *DqliteDB) isInitialized() (bool, error) {
+	if _, err := os.Stat(filepath.Join(db.os.DatabaseDir, "info.yaml")); err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
 }
 
 // Bootstrap dqlite.
