@@ -379,6 +379,11 @@ func (db *DqliteDB) heartbeat(leaderInfo dqliteClient.NodeInfo, servers []dqlite
 
 // dqliteNetworkDial creates a connection to the internal database endpoint.
 func dqliteNetworkDial(ctx context.Context, addr string, db *DqliteDB) (net.Conn, error) {
+	addrPort, err := types.ParseAddrPort(addr)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse the address: %w", err)
+	}
+
 	peerCert, err := db.clusterCert().PublicKeyX509()
 	if err != nil {
 		return nil, err
@@ -396,13 +401,13 @@ func dqliteNetworkDial(ctx context.Context, addr string, db *DqliteDB) (net.Conn
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 		Header:     make(http.Header),
-		Host:       addr,
+		Host:       addrPort.String(),
 	}
 
-	path := fmt.Sprintf("https://%s/%s/%s", addr, internalTypes.InternalEndpoint, "database")
-	request.URL, err = url.Parse(path)
-	if err != nil {
-		return nil, err
+	request.URL = &url.URL{
+		Scheme: "https",
+		Host:   addrPort.String(),
+		Path:   fmt.Sprintf("/%s/%s", internalTypes.InternalEndpoint, "database"),
 	}
 
 	request.Header.Set("Upgrade", "dqlite")
