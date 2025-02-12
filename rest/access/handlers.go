@@ -78,7 +78,7 @@ func Authenticate(state state.State, r *http.Request, hostAddress string, truste
 	}
 
 	switch r.Host {
-	case hostAddrPort.String():
+	case hostAddrPort.WithZone("").String():
 		if r.TLS != nil {
 			for _, cert := range r.TLS.PeerCertificates {
 				trusted, fingerprint := util.CheckMutualTLS(*cert, trustedCerts)

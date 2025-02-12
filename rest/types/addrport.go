@@ -85,6 +85,15 @@ func (a *AddrPort) UnmarshalYAML(unmarshal func(v any) error) error {
 	return nil
 }
 
+// WithZone returns an AddrPort that's the same as the receiver AddrPort but with the provided zone. If zone is empty,
+// the zone is removed. If IP of AddrPort is an IPv4 address, WithZone is a no-op and returns AddrPort unchanged.
+func (a AddrPort) WithZone(zone string) AddrPort {
+	return AddrPort{AddrPort: netip.AddrPortFrom(
+		a.Addr().WithZone(zone),
+		a.Port(),
+	)}
+}
+
 // String returns the string representation of the AddrPort, or an empty string if it is empty.
 func (a AddrPort) String() string {
 	if a == (AddrPort{}) {

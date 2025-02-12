@@ -155,9 +155,9 @@ func firstPathElement(path string) string {
 		if parts[0] == "" {
 			// "/core"
 			return parts[1]
-		} else {
-			// "core/"
-			return parts[0]
 		}
+
+		// "core/"
+		return parts[0]
 	}
 }
