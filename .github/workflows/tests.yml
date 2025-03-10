@@ -47,12 +47,7 @@ jobs:
           go mod tidy -go="${GOMIN}"
 
       - name: Install dependencies
-        run: |
-          set -eux
-          sudo apt-get update
-
-          sudo apt-get install --no-install-recommends -y \
-            shellcheck pkg-config autoconf automake libtool make libuv1-dev libsqlite3-dev liblz4-dev
+        uses: ./.github/actions/install-builddeps
 
       - name: Build dependencies
         run: |
@@ -144,6 +139,9 @@ jobs:
           name: system-tiobe-tics-deps
           merge-multiple: true
           path: /home/runner/go/bin
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-builddeps
 
       - name: Install dependencies
         run: |
