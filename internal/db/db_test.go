@@ -670,7 +670,7 @@ func NewTestDB(extensionsExternal []schema.Update) (*DqliteDB, error) {
 		return nil, err
 	}
 
-	err = cluster.PrepareStmts(db.db, cluster.GetCallerProject(), false)
+	err = cluster.PrepareStmts(db.db, "", false)
 	if err != nil {
 		return nil, err
 	}
