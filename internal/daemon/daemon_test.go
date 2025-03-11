@@ -189,7 +189,7 @@ func (t *daemonsSuite) Test_UpdateServers() {
 		var err error
 
 		// Create a new daemon and set some defaults.
-		daemon := NewDaemon("project")
+		daemon := NewDaemon()
 		daemon.version = "1.0.0"
 		daemon.config = config.NewDaemonConfig(filepath.Join(t.T().TempDir(), "daemon.yaml"))
 		daemon.extensionServers = test.extensionServers

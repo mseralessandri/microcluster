@@ -79,7 +79,6 @@ type Args struct {
 
 // Daemon holds information for the microcluster daemon.
 type Daemon struct {
-	project string // The project refers to the name of the go-project that is calling MicroCluster.
 	version string // The version of the go-project that is calling MicroCluster
 
 	config *internalConfig.DaemonConfig // Local daemon's configuration from daemon.yaml file.
@@ -115,12 +114,11 @@ type Daemon struct {
 }
 
 // NewDaemon initializes the Daemon context and channels.
-func NewDaemon(project string) *Daemon {
+func NewDaemon() *Daemon {
 	d := &Daemon{
 		shutdownDoneCh:   make(chan error),
 		ReadyChan:        make(chan struct{}),
 		extensionServers: make(map[string]rest.Server),
-		project:          project,
 	}
 
 	d.stop = sync.OnceValue(func() error {
@@ -580,7 +578,7 @@ func (d *Daemon) StartAPI(ctx context.Context, bootstrap bool, initConfig map[st
 
 		clusterMember.SchemaInternal, clusterMember.SchemaExternal, _ = d.db.Schema().Version()
 
-		err = d.db.Bootstrap(d.Extensions, d.project, *d.Address(), clusterMember)
+		err = d.db.Bootstrap(d.Extensions, *d.Address(), clusterMember)
 		if err != nil {
 			return err
 		}
@@ -602,12 +600,12 @@ func (d *Daemon) StartAPI(ctx context.Context, bootstrap bool, initConfig map[st
 	}
 
 	if len(joinAddresses) != 0 {
-		err = d.db.Join(d.Extensions, d.project, *d.Address(), joinAddresses...)
+		err = d.db.Join(d.Extensions, *d.Address(), joinAddresses...)
 		if err != nil {
 			return fmt.Errorf("Failed to join cluster: %w", err)
 		}
 	} else {
-		err = d.db.StartWithCluster(d.Extensions, d.project, *d.Address(), d.trustStore.Remotes().Addresses())
+		err = d.db.StartWithCluster(d.Extensions, *d.Address(), d.trustStore.Remotes().Addresses())
 		if err != nil {
 			return fmt.Errorf("Failed to re-establish cluster connection: %w", err)
 		}
