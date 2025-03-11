@@ -12,8 +12,8 @@ import (
 	"github.com/canonical/lxd/shared/logger"
 )
 
-var stmtsByProject = map[string]map[int]string{} // Statement code to statement SQL text
-var preparedStmts = map[int]*sql.Stmt{}          // Statement code to SQL statement.
+var stmts = map[int]string{}            // Statement code to statement SQL text
+var preparedStmts = map[int]*sql.Stmt{} // Statement code to SQL statement.
 
 // RegisterStmt register a SQL statement.
 //
@@ -22,47 +22,29 @@ var preparedStmts = map[int]*sql.Stmt{}          // Statement code to SQL statem
 //
 // Return a unique registration code.
 func RegisterStmt(sql string) int {
-	project := GetCallerProject()
-
-	stmts := stmtsByProject[project]
 	if stmts == nil {
 		stmts = map[int]string{}
 	}
 
-	// Have a unique code for each statement, regardless of project,
-	// so we can access them without knowing the project.
-	var code int
-	for _, stmts := range stmtsByProject {
-		code += len(stmts)
-	}
+	// Have a unique code for each statement.
+	code := len(stmts) + 1
 
 	stmts[code] = sql
-
-	stmtsByProject[project] = stmts
-
 	return code
 }
 
 // PrepareStmts prepares all registered statements and stores them in preparedStmts.
+// The project argument is kept for backwards compatibility but is deprecated.
 func PrepareStmts(db *sql.DB, project string, skipErrors bool) error {
-	logger.Infof("Preparing statements for Go project %q", project)
+	logger.Infof("Preparing statements")
 
-	// Also prepare statements from microcluster if we are in a different project.
-	projects := []string{"microcluster"}
-	if project != "microcluster" {
-		projects = append(projects, project)
-	}
-
-	for _, project := range projects {
-		stmts := stmtsByProject[project]
-		for code, stmt := range stmts {
-			preparedStmt, err := db.Prepare(stmt)
-			if err != nil && !skipErrors {
-				return fmt.Errorf("%q: %w", stmt, err)
-			}
-
-			preparedStmts[code] = preparedStmt
+	for code, stmt := range stmts {
+		preparedStmt, err := db.Prepare(stmt)
+		if err != nil && !skipErrors {
+			return fmt.Errorf("%q: %w", stmt, err)
 		}
+
+		preparedStmts[code] = preparedStmt
 	}
 
 	return nil
@@ -80,9 +62,8 @@ func Stmt(tx *sql.Tx, code int) (*sql.Stmt, error) {
 
 // StmtString returns the in-memory query string with the given code.
 func StmtString(code int) (string, error) {
-	for _, stmts := range stmtsByProject {
-		stmt, ok := stmts[code]
-		if ok {
+	for stmtCode, stmt := range stmts {
+		if stmtCode == code {
 			return stmt, nil
 		}
 	}
