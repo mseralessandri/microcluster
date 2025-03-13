@@ -24,9 +24,6 @@ jobs:
   code-tests:
     name: Code
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        go: ["1.22.x"]
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -35,12 +32,12 @@ jobs:
         uses: actions/dependency-review-action@3b139cfc5fae8b618d3eae3675e383bb1769c019 # v4.5.0
         if: github.event_name == 'pull_request'
 
-      - name: Install Go (${{ matrix.go }})
+      - name: Install Go
         uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
         with:
-          go-version: ${{ matrix.go }}
+          go-version-file: 'go.mod'
 
-      - name: Check compatibility with min Go version (${{ matrix.go }})
+      - name: Check compatibility with min Go version
         run: |
           set -eux
           GOMIN="$(sed -n 's/^GOMIN=\([0-9.]\+\)$/\1/p' Makefile)"
@@ -129,7 +126,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
         with:
-          go-version: 1.22.x
+          go-version-file: 'go.mod'
 
       - name: Download coverage data
         uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
