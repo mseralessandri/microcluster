@@ -72,6 +72,8 @@ func StmtString(code int) (string, error) {
 }
 
 // GetCallerProject will get the go project name of whichever function called `GetCallerProject`.
+//
+// Deprecated: The caller project is no longer required and causes issues when vendoring.
 func GetCallerProject() string {
 	sep := string(os.PathSeparator)
 
