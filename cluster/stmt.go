@@ -3,11 +3,6 @@ package cluster
 import (
 	"database/sql"
 	"fmt"
-	"os"
-	"path/filepath"
-	"regexp"
-	"runtime"
-	"strings"
 
 	"github.com/canonical/lxd/shared/logger"
 )
@@ -69,45 +64,4 @@ func StmtString(code int) (string, error) {
 	}
 
 	return "", fmt.Errorf("No prepared statement registered with code %d", code)
-}
-
-// GetCallerProject will get the go project name of whichever function called `GetCallerProject`.
-//
-// Deprecated: The caller project is no longer required and causes issues when vendoring.
-func GetCallerProject() string {
-	sep := string(os.PathSeparator)
-
-	// Get the caller of whoever called this function.
-	_, file, _, _ := runtime.Caller(2)
-
-	// The project may be a snap build path of the form ...parts/<project>/build....
-	_, after, ok := strings.Cut(file, fmt.Sprintf("parts%s", sep))
-	if ok {
-		project, _, ok := strings.Cut(after, fmt.Sprintf("%sbuild", sep))
-		if ok {
-			return project
-		}
-	}
-
-	// If not a snap build path, the project may be in a go module path of the form .../project@version....
-	before, _, ok := strings.Cut(file, "@")
-	base := filepath.Base(before)
-	if ok && base != "" {
-		// If the base path is a go module version like v2, the project name will be one level down.
-		exp := regexp.MustCompile(`^v\d+$`)
-		if exp.MatchString(base) {
-			return filepath.Base(filepath.Dir(before))
-		}
-
-		return base
-	}
-
-	// If not a go module path,	assume a GOPATH of the form example.com/author/project/packages....
-	_, after, _ = strings.Cut(file, fmt.Sprintf("%ssrc%s", sep, sep))
-	tree := strings.Split(after, sep)
-	if len(tree) >= 3 {
-		return tree[2]
-	}
-
-	return ""
 }
