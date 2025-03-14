@@ -29,8 +29,7 @@ func RegisterStmt(sql string) int {
 }
 
 // PrepareStmts prepares all registered statements and stores them in preparedStmts.
-// The project argument is kept for backwards compatibility but is deprecated.
-func PrepareStmts(db *sql.DB, project string, skipErrors bool) error {
+func PrepareStmts(db *sql.DB, skipErrors bool) error {
 	logger.Infof("Preparing statements")
 
 	for code, stmt := range stmts {
