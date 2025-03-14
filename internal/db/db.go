@@ -71,7 +71,7 @@ func (db *DqliteDB) Open(ext extensions.Extensions, bootstrap bool) error {
 		db.db = nil
 	})
 
-	err = cluster.PrepareStmts(db.db, "", false)
+	err = cluster.PrepareStmts(db.db, false)
 	if err != nil {
 		return err
 	}
