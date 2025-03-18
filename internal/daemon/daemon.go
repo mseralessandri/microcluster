@@ -137,7 +137,8 @@ func NewDaemon(project string) *Daemon {
 		}
 
 		if d.endpoints != nil {
-			err := d.endpoints.Down()
+			// Stop the listeners and shutdown the underlying servers.
+			err := d.endpoints.Down(true)
 			if err != nil {
 				return err
 			}
@@ -551,7 +552,9 @@ func (d *Daemon) StartAPI(ctx context.Context, bootstrap bool, initConfig map[st
 
 	d.extensionServersMu.RUnlock()
 
-	err = d.endpoints.Down(endpoints.EndpointNetwork)
+	// Close the listener but don't shutdown the underlying server.
+	// This allows staying connected with the API during the join procedure.
+	err = d.endpoints.Down(false, endpoints.EndpointNetwork)
 	if err != nil {
 		return err
 	}
@@ -750,7 +753,9 @@ func (d *Daemon) UpdateServers() error {
 			d.extensionServers[serverName] = extensionServer
 			d.extensionServersMu.Unlock()
 
-			err := d.endpoints.DownByName(serverName)
+			// Stop the listener and shutdown the underlying server.
+			// Any active connections will be dropped at this point.
+			err := d.endpoints.DownByName(true, serverName)
 			if err != nil {
 				return err
 			}
@@ -781,7 +786,8 @@ func (d *Daemon) UpdateServers() error {
 
 		// Stop the additional listener in case it got modified.
 		if modified {
-			err := d.endpoints.DownByName(serverName)
+			// Don't shutdown the underlying server to keep active connections intact.
+			err := d.endpoints.DownByName(false, serverName)
 			if err != nil {
 				return err
 			}
@@ -1103,7 +1109,8 @@ func (d *Daemon) State() state.State {
 				return err
 			}
 
-			return d.endpoints.Down()
+			// Close the listeners and shutdown the underlying servers.
+			return d.endpoints.Down(true)
 		},
 	}
 
