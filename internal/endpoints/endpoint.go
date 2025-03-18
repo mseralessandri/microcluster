@@ -5,6 +5,7 @@ type Endpoint interface {
 	Listen() error
 	Serve()
 	Close() error
+	Shutdown() error
 	Type() EndpointType
 }
 

@@ -127,10 +127,7 @@ func (n *Network) Serve() {
 	}()
 }
 
-// Close the listener and server.
-// Will attempt to close the server gracefully, if configured with a drain connections timeout.
-// Note that graceful shutdown will timeout if the connections do not finish (e.g.: a request caused the server
-// to Close the endpoints on the same goroutine).
+// Close the listener.
 func (n *Network) Close() error {
 	if n.listener == nil {
 		return nil
@@ -143,10 +140,12 @@ func (n *Network) Close() error {
 	// It does not shutdown the server, or its currently accepted connections.
 	// We need to shut this down separately, as the listener is not passed to the server
 	// if n.Serve() is not called.
-	err := n.listener.Close()
-	if err != nil {
-		return err
-	}
+	return n.listener.Close()
+}
 
+// Shutdown will attempt to close the server gracefully, if configured with a drain connections timeout.
+// Note that graceful shutdown will timeout if the connections do not finish (e.g.: a request caused the server
+// to Close the endpoints on the same goroutine).
+func (n *Network) Shutdown() error {
 	return shutdownServer(n.server, n.drainConnectionsTimeout)
 }
