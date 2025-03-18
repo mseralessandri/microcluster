@@ -26,7 +26,8 @@ func (e *Endpoints) Up() error {
 	err := e.up(e.listeners)
 	if err != nil {
 		// Attempt to call Down() in case something actually got brought up.
-		_ = e.Down()
+		// Close the listeners and shutdown the underlying servers.
+		_ = e.Down(true)
 
 		return err
 	}
@@ -59,7 +60,8 @@ func (e *Endpoints) Add(endpoints map[string]Endpoint) error {
 	if err != nil {
 		// Attempt to call DownByName() in case something actually got brought up.
 		for name := range endpoints {
-			_ = e.DownByName(name)
+			// Close the listener and shutdown the underlying server.
+			_ = e.DownByName(true, name)
 		}
 
 		return err
