@@ -13,7 +13,6 @@ There are 4 components to the Core API:
 
 Any additions to the internal Microcluster API will happen under the `/core` endpoint path prefix. This path prefix is reserved and should not be used for additionally supplied API resources.
 
-
 ## Additional servers
 
 Microcluster can set up additional servers with `DaemonArgs.Servers`:
@@ -77,5 +76,3 @@ dargs := microcluster.DaemonArgs{
     },
 }
 ```
-
-
