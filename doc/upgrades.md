@@ -10,7 +10,16 @@ A schema version is maintained per cluster member, representing the sum-total of
 
 ### Example
 
-https://github.com/canonical/microcluster/blob/v3/example/database/extended_schema.go#L11-L16
+```go
+// SchemaExtensions is a list of schema extensions that can be passed to the MicroCluster daemon.
+// Each entry will increase the database schema version by one, and will be applied after internal schema updates.
+var SchemaExtensions = []schema.Update{
+	schemaAppend1,
+	schemaAppend2,
+}
+```
+
+You can see this code in use within [the example package](https://github.com/canonical/microcluster/blob/v3/example/database/extended_schema.go#L11-L16).
 
 ## API extensions
 
@@ -18,7 +27,20 @@ The [app.Start function](https://github.com/canonical/microcluster/blob/v3/micro
 
 ### Example
 
-https://github.com/canonical/microcluster/blob/v3/example/api/extensions.go
+```go
+// These are the extensions that are present when the daemon starts.
+var extensions = []string{
+	"custom_extension_a_0",
+	"custom_extension_a_1",
+}
+
+// Extensions returns the list of Microcluster extensions.
+func Extensions() []string {
+	return extensions
+}
+```
+
+You can see this code in use within [the example package](https://github.com/canonical/microcluster/blob/v3/example/api/extensions.go).
 
 ## Upgrade behavior
 
@@ -34,10 +56,8 @@ Cluster members that have not been upgraded cannot be restarted while an upgrade
 
 * On upgraded members, before the upgrade is committed, [client.GetClusterMembers](https://github.com/canonical/microcluster/blob/4d80df396e335bf26f9895956e846e082bb8f624/internal/rest/client/cluster.go#L40-L49) will report [UPGRADING](https://github.com/canonical/microcluster/blob/4d80df396e335bf26f9895956e846e082bb8f624/rest/types/cluster.go#L56) for all waiting members, and [NEEDS UPGRADE](https://github.com/canonical/microcluster/blob/4d80df396e335bf26f9895956e846e082bb8f624/rest/types/cluster.go#L59) for all members that have not been upgraded.
 
-
 ## Example schema upgrade
 
 The following example performs a schema upgrade on a 3-member cluster, incrementing the schema version by 1. Adding additional API extensions would result in the same behavior.
 
 ![Example schema upgrade](images/schema_upgrade_example.svg)
-
