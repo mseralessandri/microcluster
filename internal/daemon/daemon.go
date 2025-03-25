@@ -347,13 +347,15 @@ func (d *Daemon) init(listenAddress string, socketGroup string, heartbeatInterva
 	d.db.SetSchema(schemaExtensions, d.Extensions)
 
 	status := d.db.Status()
-	if status == types.DatabaseStarting {
+	switch status {
+	case types.DatabaseStarting:
 		// Database is already bootstrapped, reload the daemon to ensure the latest configuration is applied.
 		err := d.reload()
 		if err != nil {
 			return fmt.Errorf("Failed to reload daemon: %w", err)
 		}
-	} else if status == types.DatabaseNotReady {
+
+	case types.DatabaseNotReady:
 		logger.Warn("Microcluster database is uninitialized")
 	}
 
