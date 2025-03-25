@@ -931,7 +931,7 @@ func (d *Daemon) sendUpgradeNotification(ctx context.Context, c *client.Client) 
 	upgradeRequest.Header.Set("X-Dqlite-Version", fmt.Sprintf("%d", 1))
 	upgradeRequest = upgradeRequest.WithContext(ctx)
 
-	resp, err := c.Client.Do(upgradeRequest)
+	resp, err := c.Do(upgradeRequest)
 	if err != nil {
 		logger.Error("Failed to send database upgrade request", logger.Ctx{"error": err})
 		return nil
