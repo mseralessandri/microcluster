@@ -284,15 +284,15 @@ func (c *Client) mergeURL(endpointType types.EndpointPrefix, endpoint *api.URL) 
 	localURL.URL.Host = c.url.URL.Host
 	localURL.URL.Scheme = c.url.URL.Scheme
 	localURL.URL.Path = filepath.Join("/", string(endpointType), localURL.URL.Path)
-	localURL.URL.RawPath = filepath.Join("/", string(endpointType), localURL.URL.RawPath)
+	localURL.RawPath = filepath.Join("/", string(endpointType), localURL.RawPath)
 
-	localQuery := localURL.URL.Query()
-	clientQuery := c.url.URL.Query()
+	localQuery := localURL.Query()
+	clientQuery := c.url.Query()
 	for k := range localQuery {
 		clientQuery.Set(k, localQuery.Get(k))
 	}
 
-	localURL.URL.RawQuery = clientQuery.Encode()
+	localURL.RawQuery = clientQuery.Encode()
 	return localURL
 }
 
@@ -355,9 +355,9 @@ func (c *Client) RawWebsocket(ctx context.Context, endpointType types.EndpointPr
 	}
 
 	// Get the transport configuration from the HTTP client.
-	tr, ok := c.Client.Transport.(*http.Transport)
+	tr, ok := c.Transport.(*http.Transport)
 	if !ok {
-		return nil, fmt.Errorf("Invalid underlying client transport, expected %T, got %T", &http.Transport{}, c.Client.Transport)
+		return nil, fmt.Errorf("Invalid underlying client transport, expected %T, got %T", &http.Transport{}, c.Transport)
 	}
 
 	// Setup a new websocket dialer using the already existing HTTP client.
@@ -406,7 +406,7 @@ func (c *Client) UseTarget(name string) *Client {
 	localURL.URL.Host = c.url.URL.Host
 	localURL.URL.Scheme = c.url.URL.Scheme
 	localURL.URL.Path = c.url.URL.Path
-	localURL.URL.RawQuery = c.url.URL.RawQuery
+	localURL.RawQuery = c.url.RawQuery
 	localURL = localURL.WithQuery("target", name)
 
 	return &Client{
