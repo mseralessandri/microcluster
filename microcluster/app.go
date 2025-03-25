@@ -301,13 +301,13 @@ func (m *MicroCluster) LocalClient() (*client.Client, error) {
 	}
 
 	if m.args.Proxy != nil {
-		tx, ok := c.Client.Client.Transport.(*http.Transport)
+		tx, ok := c.Transport.(*http.Transport)
 		if !ok {
-			return nil, fmt.Errorf("Invalid underlying client transport, expected %T, got %T", &http.Transport{}, c.Client.Client.Transport)
+			return nil, fmt.Errorf("Invalid underlying client transport, expected %T, got %T", &http.Transport{}, c.Transport)
 		}
 
 		tx.Proxy = m.args.Proxy
-		c.Client.Client.Transport = tx
+		c.Transport = tx
 	}
 
 	return c, nil
@@ -348,13 +348,13 @@ func (m *MicroCluster) RemoteClientWithCert(address string, cert *x509.Certifica
 	}
 
 	if m.args.Proxy != nil {
-		tx, ok := c.Client.Client.Transport.(*http.Transport)
+		tx, ok := c.Transport.(*http.Transport)
 		if !ok {
-			return nil, fmt.Errorf("Invalid underlying client transport, expected %T, got %T", &http.Transport{}, c.Client.Client.Transport)
+			return nil, fmt.Errorf("Invalid underlying client transport, expected %T, got %T", &http.Transport{}, c.Transport)
 		}
 
 		tx.Proxy = m.args.Proxy
-		c.Client.Client.Transport = tx
+		c.Transport = tx
 	}
 
 	return c, nil
