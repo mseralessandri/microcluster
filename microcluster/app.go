@@ -77,7 +77,7 @@ func (m *MicroCluster) Start(ctx context.Context, daemonArgs DaemonArgs) error {
 
 	// Start up a daemon with a basic control socket.
 	defer logger.Info("Daemon stopped")
-	d := daemon.NewDaemon(cluster.GetCallerProject())
+	d := daemon.NewDaemon()
 
 	chIgnore := make(chan os.Signal, 1)
 	signal.Notify(chIgnore, unix.SIGHUP)
