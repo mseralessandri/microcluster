@@ -1,129 +1,295 @@
-# Example MicroCluster Daemon and CLI
+# Example implementation of Microcluster
 
-This is an example package containing a MicroCluster daemon command (`microd`) and a control command (`microctl`) to be
-used as a template for creating projects with MicroCluster.
+This example package can be used as a starting point for creating projects with Microcluster. This package contains:
+- A Microcluster daemon command (`microd`) and a control command (`microctl`)
+- Examples for the built-in Microcluster API
+- Examples of how Microcluster can be extended with additional listeners with user-defined endpoints and schema versions
 
-In addition to having examples for the built-in MicroCluster API, this example shows how MicroCluster can be extended
-with additional listeners with user defined endpoints and schema versions.
+## Contents
 
-The daemon can be started with `microd` and is controlled by `microctl`.
+- [How to build and run the package](#how-to-build-and-run-the-package)
+  - [Prerequisites](#prerequisites)
+  - [Build](#build)
+  - [Run](#run)
+  - [Control](#control)
+- [Tutorial](#tutorial)
+  - [Step 1: Build the package](#step-1-build-the-package)
+  - [Step 2: Start three Microcluster daemons](#step-2-start-three-microcluster-daemons)
+  - [Step 3: Start the Dqlite database](#step-3-start-the-dqlite-database)
+  - [Step 4: Join the other members to the cluster](#step-4-join-the-other-members-to-the-cluster)
+  - [Step 5: Interact with the cluster](#step-5-interact-with-the-cluster)
+    - [Step 5.1: Remove a cluster member](#step-51-remove-a-cluster-member)
+    - [Step 5.2: Perform SQL queries](#step-52-perform-sql-queries)
+    - [Step 5.3: Perform an extended API interaction](#step-53-perform-an-extended-api-interaction)
+  - [Step 6: Shut down the Microcluster](#step-6-shut-down-the-microcluster)
 
-## Building
-`make`
+## How to build and run the package
 
-## Running
-This starts up three daemons.
+### Prerequisites
+
+#### Required packages
+
+- `Go` must be installed on your system.
+  - If [snaps are available on your system](https://snapcraft.io/docs/installing-snapd), you can install Go by running:
+
+    ```
+    sudo snap install go --classic
+    ```
+
+  - If you cannot use snaps, follow the [installation instructions from Go.dev](https://go.dev/doc/install).
+
+- Run the following commands to install the remaining required packages:
+
+  ```bash
+  sudo apt-get update
+  sudo apt-get install --no-install-recommends -y \
+            shellcheck \
+            pkg-config \
+            autoconf \
+            automake \
+            libtool \
+            make \
+            libuv1-dev \
+            libsqlite3-dev \
+            liblz4-dev
+  ```
+
+#### Environment variables
+
+After Go is installed, ensure that the CGO_ENABLED environment variable is persistently set to `1`, which allows Go programs to interface with C libraries:
+
 ```bash
-microd --state-dir /path/to/state/dir1 &
-microd --state-dir /path/to/state/dir2 &
-microd --state-dir /path/to/state/dir3 &
+go env -w CGO_ENABLED=1
 ```
 
-## Starting dqlite
+Additional variables must be set in your shell to ensure that Dqlite dependencies can be loaded during the build:
+
+| ENVIRONMENT VARIABLE | VALUE                                                       |
+|----------------------|-------------------------------------------------------------|
+| CGO_CFLAGS           | -I$HOME/go/deps/dqlite/include/                             |
+| CGO_LDFLAGS          | -L$HOME/go/deps/dqlite/.libs/                               |
+| LD_LIBRARY_PATH      | $HOME/go/deps/dqlite/.libs/                                 |
+| CGO_LDFLAGS_ALLOW    | (-Wl,-wrap,pthread_create)\|(-Wl,-z,now)                    |
+
+If you are using `bash` as your shell, you can set the above as persistent variables with the following commands:
+
 ```bash
-# Wait for the daemon to finish setup.
-microctl --state-dir /path/to/state/dir1 waitready
-
-# Bootstrap the first node to start a new cluster. The new member will be given the name "member1" and will listen on `127.0.0.1:9001`
-microctl --state-dir /path/to/state/dir1 init "member1" 127.0.0.1:9001 --bootstrap
-
-# Get some join tokens from the new cluster. These are deleted after use.
-token_node2=$(microctl --state-dir /path/to/state/dir1 tokens add "member2")
-token_node3=$(microctl --state-dir /path/to/state/dir1 tokens add "member3")
-
-# Join the dqlite cluster.
-microctl --state-dir /path/to/state/dir2 init "member2" 127.0.0.1:9002 --token ${token_node2}
-microctl --state-dir /path/to/state/dir3 init "member3" 127.0.0.1:9003 --token ${token_node3}
-
-# The cluster is now up and running!
+cat << EOF >> ~/.bashrc
+export CGO_CFLAGS="-I$HOME/go/deps/dqlite/include/"
+export CGO_LDFLAGS="-L$HOME/go/deps/dqlite/.libs/"
+export LD_LIBRARY_PATH="$HOME/go/deps/dqlite/.libs/"
+export CGO_LDFLAGS_ALLOW="(-Wl,-wrap,pthread_create)|(-Wl,-z,now)"
+EOF
+source ~/.bashrc
 ```
 
-## Interacting with the cluster
-* List info on all cluster members
+### Build
+
+Clone this repository to your system, then run the following command from the repository's root directory:
+
 ```bash
-microctl --state-dir /path/to/state/dir1 cluster list
-+------+----------------+-------+------------------------------------------------------------------+--------+
-| NAME |    ADDRESS     | ROLE  |                           CERTIFICATE                            | STATUS |
-+------+----------------+-------+------------------------------------------------------------------+--------+
-| dir1 | 127.0.0.1:9001 | voter | -----BEGIN CERTIFICATE-----                                      | ONLINE |
-|      |                |       | MIIB+jCCAYCgAwIBAgIQAJ6RWpgzHgDp2zjd0DMqBjAKBggqhkjOPQQDAzAxMRww |        |
-|      |                |       | GgYDVQQKExNsaW51eGNvbnRhaW5lcnMub3JnMREwDwYDVQQDDAhyb290QGJhdzAe |        |
-|      |                |       | Fw0yMjA3MTEyMjE1MTVaFw0zMjA3MDgyMjE1MTVaMDExHDAaBgNVBAoTE2xpbnV4 |        |
-|      |                |       | Y29udGFpbmVycy5vcmcxETAPBgNVBAMMCHJvb3RAYmF3MHYwEAYHKoZIzj0CAQYF |        |
-|      |                |       | K4EEACIDYgAEH/zhSgQz98rt+lfBBqwHumRvzLrgVB5zVejKNGdVRF3PYVUxQ4hS |        |
-|      |                |       | ekoaOSdUJYkevtlTcycIYmspCW+ItLSO+eVb/M8K9C4RIUf7kQiH50VgEE1TVrdj |        |
-|      |                |       | lSIZT97Hogmyo10wWzAOBgNVHQ8BAf8EBAMCBaAwEwYDVR0lBAwwCgYIKwYBBQUH |        |
-|      |                |       | AwEwDAYDVR0TAQH/BAIwADAmBgNVHREEHzAdggNiYXeHBH8AAAGHEAAAAAAAAAAA |        |
-|      |                |       | AAAAAAAAAAEwCgYIKoZIzj0EAwMDaAAwZQIxAJ+qccU1y0hK8Zwhr98RIeGy4Pax |        |
-|      |                |       | XzSgQ2yLmMAJHGPlky/ST6DGBk8G3234QccD2wIwUYnqzSQe1E4j7V9klf3eZFzy |        |
-|      |                |       | rEHdUWNDQN8mzk31Qu+nq6G6O0MH34uhS/s3PYtA                         |        |
-|      |                |       | -----END CERTIFICATE-----                                        |        |
-|      |                |       |                                                                  |        |
-+------+----------------+-------+------------------------------------------------------------------+--------+
-| dir2 | 127.0.0.1:9002 | voter | -----BEGIN CERTIFICATE-----                                      | ONLINE |
-|      |                |       | MIIB/DCCAYGgAwIBAgIRAPu6nctiLcTIwA4/rekYFVswCgYIKoZIzj0EAwMwMTEc |        |
-|      |                |       | MBoGA1UEChMTbGludXhjb250YWluZXJzLm9yZzERMA8GA1UEAwwIcm9vdEBiYXcw |        |
-|      |                |       | HhcNMjIwNzExMjIxNTE2WhcNMzIwNzA4MjIxNTE2WjAxMRwwGgYDVQQKExNsaW51 |        |
-|      |                |       | eGNvbnRhaW5lcnMub3JnMREwDwYDVQQDDAhyb290QGJhdzB2MBAGByqGSM49AgEG |        |
-|      |                |       | BSuBBAAiA2IABFwucU02L0giAC/zYmnKddxs3NGlmHnBNzcwljq49gTu5R7W8bdJ |        |
-|      |                |       | zFcbXIwCeVjQyUBIcNfcvneEQNzwwa8umHXE0SUtHwalDuP9Nm8cWpdKME31ijVZ |        |
-|      |                |       | 8BOTBRgRJdau7KNdMFswDgYDVR0PAQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsGAQUF |        |
-|      |                |       | BwMBMAwGA1UdEwEB/wQCMAAwJgYDVR0RBB8wHYIDYmF3hwR/AAABhxAAAAAAAAAA |        |
-|      |                |       | AAAAAAAAAAABMAoGCCqGSM49BAMDA2kAMGYCMQCG8YiNbjq4dmBG+vBQbFboliGh |        |
-|      |                |       | RVCRXtBFqWTzrwvgY2UqARl30n6gnQBjhrvf/uYCMQDB48u2GAV839SrmGP+lqu3 |        |
-|      |                |       | oEwsaHRPVupOofm4FTIjqU7YvvZHSx1btzJ+1RTwqCA=                     |        |
-|      |                |       | -----END CERTIFICATE-----                                        |        |
-|      |                |       |                                                                  |        |
-+------+----------------+-------+------------------------------------------------------------------+--------+
-| dir3 | 127.0.0.1:9003 | voter | -----BEGIN CERTIFICATE-----                                      | ONLINE |
-|      |                |       | MIIB+jCCAYGgAwIBAgIRALG9hyuIjrf3pbbC4sbAVdswCgYIKoZIzj0EAwMwMTEc |        |
-|      |                |       | MBoGA1UEChMTbGludXhjb250YWluZXJzLm9yZzERMA8GA1UEAwwIcm9vdEBiYXcw |        |
-|      |                |       | HhcNMjIwNzExMjIxNTE2WhcNMzIwNzA4MjIxNTE2WjAxMRwwGgYDVQQKExNsaW51 |        |
-|      |                |       | eGNvbnRhaW5lcnMub3JnMREwDwYDVQQDDAhyb290QGJhdzB2MBAGByqGSM49AgEG |        |
-|      |                |       | BSuBBAAiA2IABL8BgZJiKqU6QJXcg96ygwJ27HEMcxr5t5brVXEImX2AHFp3CuGW |        |
-|      |                |       | Hj5+QGB1GfI87Cfq7L1kLFa6cl9DB/RHaoRUc9snHCqTJQhVyGTkaNKEwikFM7pZ |        |
-|      |                |       | FW61iKopJhBQ86NdMFswDgYDVR0PAQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsGAQUF |        |
-|      |                |       | BwMBMAwGA1UdEwEB/wQCMAAwJgYDVR0RBB8wHYIDYmF3hwR/AAABhxAAAAAAAAAA |        |
-|      |                |       | AAAAAAAAAAABMAoGCCqGSM49BAMDA2cAMGQCMAVfZoAroiRSXTvaaGqOLX/158Is |        |
-|      |                |       | Vk0M9AMLxViq0PkM2mlvA6lyRCAHhIkTaUtdxgIwDHDS4PNtXOcEUo97lq0hkTqt |        |
-|      |                |       | JpmhZTvkvI8X4GLYU2KxuHR3+d3G1rePjErWrWle                         |        |
-|      |                |       | -----END CERTIFICATE-----                                        |        |
-|      |                |       |                                                                  |        |
-+------+----------------+-------+------------------------------------------------------------------+--------+
-```
-* Remove a cluster member
-```bash
-# This will remove member2 from the cluster.
-microctl --state-dir /path/to/state/dir1 cluster remove member2
+make -C example
 ```
 
-* Perform an SQL query
+After a successful build, test the `microctl` and `microd` commands by running:
+
 ```bash
-microctl --state-dir /path/to/state/dir1 sql "select name,address,schema,heartbeat from cluster_members"
-# Note that the schema version is 3, because this example has extended the schema with two additional updates.
-Customized schema updates and API endpoints can be added when first starting a cluster.
-+------+----------------+--------+--------------------------------+
-| name |    address     | schema |           heartbeat            |
-+------+----------------+--------+--------------------------------+
-| dir1 | 127.0.0.1:9001 | 3      | 2022-07-11T22:16:57.919512135Z |
-| dir2 | 127.0.0.1:9002 | 3      | 2022-07-11T22:16:57.983345241Z |
-| dir3 | 127.0.0.1:9003 | 3      | 2022-07-11T22:16:57.978355008Z |
-+------+----------------+--------+--------------------------------+
+microctl --help
+microd --help
 ```
-* Perform an extended API interaction
+
+If either command returns a `not found` error, confirm that the `microctl` and `microd` have been generated. Typically, they are generated in the `~/go/bin/` directory. If this directory is not defined in your system path, you must add it.
+
+If you're using `bash`, you can add it by running:
+
 ```bash
-microctl --state-dir /path/to/state/dir2 extended 127.0.0.1:9001
-cluster member at address "127.0.0.1:9002" received message "Testing 1 2 3..." from cluster member at address "127.0.0.1:9001"
-cluster member at address "127.0.0.1:9003" received message "Testing 1 2 3..." from cluster member at address "127.0.0.1:9001"
+echo 'export PATH="$HOME/go/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
-* Perform an SQL query on an extended schema table
+
+The `microd` command starts the Microcluster daemon, and `microctl` controls it.
+
+Note: These commands are not a core component of the Microcluster library; they are included in this example package to demonstrate how you can create similar commands for your own implementation.
+
+### Run
+
+Use the `microd` command along with the `--state-dir <path/to/state/directory>` flag to start a Microcluster daemon with a running control socket and no database.
+
+You must specify its [state directory](../doc/state.md), the path where the daemon's information is stored. If the state directory does not exist at the path you provide, `microd` creates the directory.
+
+View the `microd --help` documentation for other options, or [view the tutorial](#tutorial) for example usage.
+
+### Control
+
+Use the `microctl` command to control the Microcluster. View `microctl --help` for options, or [view the tutorial](#tutorial) for example usage.
+
+## Tutorial
+
+This tutorial walks you through using the example package to start up a Microcluster and interact with it.
+
+### Step 1: Build the package
+
+Ensure that your system meets the prerequisites in the [how-to guide](#how-to-build-and-run-the-package) above, then [build](#build) the package.
+
+### Step 2: Start three Microcluster daemons
+
+The commands below start three Microcluster daemons in the background, creating state directories for each and waiting for the daemon to be ready to process requests. Each daemon's PID is stored in a shell variable (`proc1`, `proc2`, and `proc3`) for later use.
+
+Run:
+
 ```bash
-microctl --state-dir /path/to/state/dir1 sql "insert into extended_table (key, value) values ('some_key', 'some_value')"
+microd --state-dir /tmp/mc1 & proc1=$!
+microd --state-dir /tmp/mc2 & proc2=$!
+microd --state-dir /tmp/mc3 & proc3=$!
+```
+
+You should see three "Microcluster database is uninitialized" warnings. Don't worry; this is expected.
+
+### Step 3: Start the Dqlite database
+
+Run the following command to bootstrap the first Microcluster member, which starts a new cluster:
+
+```bash
+microctl --state-dir /tmp/mc1 init mc1 127.0.0.1:9001 --bootstrap
+```
+
+You might see a warning that "The 'missing_extension' is not registered". Disregard this warning.
+
+To confirm creation of the cluster, run the following command:
+
+```bash
+microctl --state-dir /tmp/mc1 cluster list
+```
+
+You should see a table that displays a single cluster member with the name of `mc1` and an address of `127.0.0.1:9001`, along with its role, fingerprint, and status. Ensure that the status is `ONLINE` before you proceed.
+
+### Step 4: Join the other members to the cluster
+
+To generate and use join tokens for the second and third Microcluster members, using the names `mc2` and `mc3`, run:
+
+```bash
+token=$(microctl --state-dir /tmp/mc1 tokens add mc2)
+microctl --state-dir /tmp/mc2 init mc2 127.0.0.1:9002 --token "$token"
+token=$(microctl --state-dir /tmp/mc1 tokens add mc3)
+microctl --state-dir /tmp/mc3 init mc3 127.0.0.1:9003 --token "$token"
+```
+
+Note: Each token can only be used once, because they are deleted from the cluster after use.
+
+To confirm that the second and third Microcluster members have joined the cluster, view the cluster list again.
+
+### Step 5: Interact with the cluster
+
+#### Step 5.1: Remove a cluster member
+
+You have created three Microcluster daemons, used one to bootstrap a new cluster, then joined the other two daemons to that cluster. Next, remove the `mc3` cluster member:
+
+```bash
+microctl --state-dir /tmp/mc1 cluster remove mc3
+```
+
+Note: When using `cluster remove`, for the `--state-dir` argument, you can use the state directory for any online cluster member. This includes the state directory of the cluster member being removed.
+
+#### Step 5.2: Perform SQL queries
+
+The `microctl` command includes an option to execute an SQL query against the cluster's Dqlite database.
+
+Run the following command to view all available tables:
+
+```bash
+microctl --state-dir /tmp/mc1 sql "SELECT name FROM sqlite_master WHERE type='table';"
+```
+
+Expected output:
+
+```
++----------------------+
+|         name         |
++----------------------+
+| sqlite_sequence      |
+| schemas              |
+| core_cluster_members |
+| core_token_records   |
+| extended_table       |
+| some_other_table     |
++----------------------+
+```
+
+Try querying data from the `core_cluster_members` table:
+
+```bash
+microctl --state-dir /tmp/mc1 sql "SELECT name,address,heartbeat FROM core_cluster_members"
+```
+
+Expected output:
+
+```
++------+----------------+--------------------------------+
+| name |    address     |           heartbeat            |
++------+----------------+--------------------------------+
+| mc1  | 127.0.0.1:9001 | 2025-03-20T17:52:03.101704405Z |
+| mc2  | 127.0.0.1:9002 | 2025-03-20T17:52:03.125658611Z |
++------+----------------+--------------------------------+
+```
+
+Finally, perform an SQL query on an extended schema table called `extended_table`:
+
+```bash
+microctl --state-dir /tmp/mc1 sql "insert into extended_table (key, value) values ('some_key', 'some_value')"
+```
+
+Expected output:
+
+```
 Rows affected: 1
-microctl --state-dir /path/to/state/dir1 sql "select * from extended_table"
+```
+
+View the updated table:
+
+```bash
+microctl --state-dir /tmp/mc1 sql "select * from extended_table"
+```
+
+Expected output:
+
+```
 +----+----------+------------+
 | id |   key    |   value    |
 +----+----------+------------+
 | 1  | some_key | some_value |
 +----+----------+------------+
 ```
+
+#### Step 5.3: Perform an extended API interaction
+
+Run:
+
+```bash
+microctl --state-dir /tmp/mc2 extended 127.0.0.1:9001
+```
+
+Expected output:
+
+```
+cluster member at address "127.0.0.1:9002" received message "Testing 1 2 3..." from cluster member at address "127.0.0.1:9001"
+```
+
+This demonstrates using the extended API to communicate between `mc1` (127.0.0.1:9001) and `mc2` (127.0.0.1:9002).
+
+### Step 6: Shut down the Microcluster
+
+To shut down the Microcluster, stop the daemons using the PID variables defined in Step 2:
+
+```bash
+kill $proc1 $proc2 $proc3
+```
+
+If you are done using the example package, or you want to start the tutorial over from the beginning, also remove the `/tmp/mc1`, `/tmp/mc2`, and `/tmp/mc3` directories:
+
+```bash
+rm -rf /tmp/mc*
+```
+
+## Next steps
+
+- Explore [more of the Microcluster developer documentation](../doc/).
