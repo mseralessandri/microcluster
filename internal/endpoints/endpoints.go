@@ -26,7 +26,8 @@ func (e *Endpoints) Up() error {
 	err := e.up(e.listeners)
 	if err != nil {
 		// Attempt to call Down() in case something actually got brought up.
-		_ = e.Down()
+		// Close the listeners and shutdown the underlying servers.
+		_ = e.Down(true)
 
 		return err
 	}
@@ -59,7 +60,8 @@ func (e *Endpoints) Add(endpoints map[string]Endpoint) error {
 	if err != nil {
 		// Attempt to call DownByName() in case something actually got brought up.
 		for name := range endpoints {
-			_ = e.DownByName(name)
+			// Close the listener and shutdown the underlying server.
+			_ = e.DownByName(true, name)
 		}
 
 		return err
@@ -97,7 +99,7 @@ func (e *Endpoints) up(listeners map[string]Endpoint) error {
 }
 
 // Down closes all of the configured listeners, or any for the type specifically supplied.
-func (e *Endpoints) Down(types ...EndpointType) error {
+func (e *Endpoints) Down(shutdown bool, types ...EndpointType) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -115,6 +117,13 @@ func (e *Endpoints) Down(types ...EndpointType) error {
 				return err
 			}
 
+			if shutdown {
+				err = endpoint.Shutdown()
+				if err != nil {
+					return err
+				}
+			}
+
 			// Delete the stopped endpoint from the slice.
 			delete(e.listeners, name)
 		}
@@ -124,7 +133,7 @@ func (e *Endpoints) Down(types ...EndpointType) error {
 }
 
 // DownByName closes the configured listeners based on its name.
-func (e *Endpoints) DownByName(name string) error {
+func (e *Endpoints) DownByName(shutdown bool, name string) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -135,6 +144,12 @@ func (e *Endpoints) DownByName(name string) error {
 				return err
 			}
 
+			if shutdown {
+				err = endpoint.Shutdown()
+				if err != nil {
+					return err
+				}
+			}
 			// Delete the stopped endpoint from the slice.
 			delete(e.listeners, name)
 		}

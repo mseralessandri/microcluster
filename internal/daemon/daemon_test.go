@@ -232,7 +232,7 @@ func (t *daemonsSuite) Test_UpdateServers() {
 		}
 
 		// Close all endpoints.
-		err = daemon.endpoints.Down(endpoints.EndpointNetwork)
+		err = daemon.endpoints.Down(true, endpoints.EndpointNetwork)
 		require.NoError(t.T(), err)
 	}
 }
