@@ -88,6 +88,14 @@ source ~/.bashrc
 Clone this repository to your system, then run the following command from the repository's root directory:
 
 ```bash
+make deps
+```
+
+This installs required dependencies, including Dqlite.
+
+If the previous command is successful, then build the example package by running:
+
+```bash
 make -C example
 ```
 
