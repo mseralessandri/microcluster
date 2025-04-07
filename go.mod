@@ -5,7 +5,7 @@ go 1.23.3
 require (
 	github.com/canonical/go-dqlite/v3 v3.0.0
 	github.com/canonical/lxd v0.0.0-20250312152252-bbadca9ac9f2
-	github.com/fsnotify/fsnotify v1.8.0
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/google/renameio v1.0.1
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.3
