@@ -1,4 +1,4 @@
-GOMIN=1.23.3
+GOMIN=1.24.2
 GOPATH ?= $(shell go env GOPATH)
 DQLITE_PATH=$(GOPATH)/deps/dqlite
 DQLITE_BRANCH=master
@@ -52,6 +52,8 @@ endif
 update-gomod:
 	go get -t -v -u ./...
 	go mod tidy -go=$(GOMIN)
+
+	go get github.com/olekukonko/tablewriter@v0.0.5 # Due to breaking API in later versions
 
 	# Use the bundled toolchain that meets the minimum go version
 	go get toolchain@none
