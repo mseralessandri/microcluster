@@ -1,7 +1,9 @@
 package daemon
 
 import (
+	"bytes"
 	"regexp"
+	"strings"
 
 	"github.com/canonical/lxd/shared/logger"
 
@@ -40,12 +42,18 @@ func (l logFilter) Write(p []byte) (int, error) {
 
 // stripLog strips the log message to determine whether or not its unwanted.
 func (l logFilter) stripLog(p []byte) string {
+	// Strip the newline from the end if it exists.
+	p = bytes.TrimRightFunc(p, func(r rune) bool {
+		return r == '\n'
+	})
+
 	// Get the source IP address.
 	match := unwantedLogRegex.FindSubmatch(p)
 	var sourceIP string
 	if match != nil {
 		if match[1] != nil {
-			sourceIP = string(match[1])
+			// Trim off potential IPv6 brackets.
+			sourceIP = strings.Trim(string(match[1]), "[]")
 		}
 	}
 
