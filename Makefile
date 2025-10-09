@@ -1,7 +1,7 @@
 GOMIN=1.24.6
 GOPATH ?= $(shell go env GOPATH)
 DQLITE_PATH=$(GOPATH)/deps/dqlite
-DQLITE_BRANCH=master
+DQLITE_BRANCH=main
 
 .PHONY: default
 default: update-schema
