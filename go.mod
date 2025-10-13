@@ -4,7 +4,7 @@ go 1.24.8
 
 require (
 	github.com/canonical/go-dqlite/v3 v3.0.3
-	github.com/canonical/lxd v0.0.0-20251010202431-92ad34566a9e
+	github.com/canonical/lxd v0.0.0-20251006151028-f9140addf608
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/google/renameio v1.0.1
 	github.com/gorilla/mux v1.8.1

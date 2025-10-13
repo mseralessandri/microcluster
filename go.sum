@@ -6,6 +6,8 @@ github.com/bmatcuk/doublestar/v4 v4.9.1 h1:X8jg9rRZmJd4yRy7ZeNDRnM+T3ZfHv15JiBJ/
 github.com/bmatcuk/doublestar/v4 v4.9.1/go.mod h1:xBQ8jztBU6kakFMg+8WGxn0c6z1fTSPVIjEY1Wr7jzc=
 github.com/canonical/go-dqlite/v3 v3.0.3 h1:JkdMD+f21yuPcS+r6gzO57lBkU5U76xmWyk8uT/eruI=
 github.com/canonical/go-dqlite/v3 v3.0.3/go.mod h1:6O+E6MiYesijRUOECyywp16iT+N4QOrvjDWWiMJ/xF0=
+github.com/canonical/lxd v0.0.0-20251006151028-f9140addf608 h1:51KSrlhxsXGS/mxKwwks70uZROFpICOLQ12VWturHzw=
+github.com/canonical/lxd v0.0.0-20251006151028-f9140addf608/go.mod h1:5vYXEfec6h6cQ1wCjg7j0bjIZ3HKLs6mNY0O/aCVLls=
 github.com/canonical/lxd v0.0.0-20251010202431-92ad34566a9e h1:q1bXsu5Y5XMe55eUd6LBczvYlMAj7sbEcLZnLbhlK2I=
 github.com/canonical/lxd v0.0.0-20251010202431-92ad34566a9e/go.mod h1:cffFZtQWcIWp2HLY1918BWr1yjuqsfEVbp5bfB2kimI=
 github.com/clipperhouse/uax29/v2 v2.2.0 h1:ChwIKnQN3kcZteTXMgb1wztSgaU+ZemkgWdohwgs8tY=
@@ -163,6 +165,7 @@ golang.org/x/net v0.10.0/go.mod h1:0qNGK6F8kojg2nk9dLZ2mShWaEBan6FAoqfSigmmuDg=
 golang.org/x/net v0.15.0/go.mod h1:idbUs1IY1+zTqbi8yxTbhexhEEk5ur9LInksu6HrEpk=
 golang.org/x/net v0.21.0/go.mod h1:bIjVDfnllIU7BJ2DNgfnXvpSvtn8VRwhlsaeUTyUS44=
 golang.org/x/net v0.25.0/go.mod h1:JkAGAh7GEvH74S6FOH42FLoXpXbE/aqXSrIQjXgsiwM=
+golang.org/x/net v0.45.0 h1:RLBg5JKixCy82FtLJpeNlVM0nrSqpCRYzVU1n8kj0tM=
 golang.org/x/net v0.46.0 h1:giFlY12I07fugqwPuWJi68oOnpfqFnJIJzaIIm2JVV4=
 golang.org/x/net v0.46.0/go.mod h1:Q9BGdFy1y4nkUwiLvT5qtyhAnEHgnQ/zd8PfU6nc210=
 golang.org/x/oauth2 v0.32.0 h1:jsCblLleRMDrxMN29H3z/k1KliIvpLgCkE6R8FXXNgY=
