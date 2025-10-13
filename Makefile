@@ -51,10 +51,11 @@ endif
 .PHONY: update-gomod
 update-gomod:
 	go get -t -v -u ./...
-	go mod tidy -go=$(GOMIN)
 
 	go get github.com/canonical/lxd@stable-5.21 # Stay on v2 dqlite and specific LXD LTS client from stable-5.21 branch
 	go get github.com/olekukonko/tablewriter@v0.0.5 # Due to breaking API in later versions
+
+	go mod tidy -go=$(GOMIN)
 
 	# Use the bundled toolchain that meets the minimum go version
 	go get toolchain@none
