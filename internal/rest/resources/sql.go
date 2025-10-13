@@ -11,13 +11,13 @@ import (
 	"time"
 
 	"github.com/canonical/lxd/lxd/db/query"
-	"github.com/canonical/lxd/lxd/response"
 	"github.com/canonical/lxd/shared/logger"
 
 	"github.com/canonical/microcluster/v3/internal/rest/types"
 	"github.com/canonical/microcluster/v3/internal/state"
 	"github.com/canonical/microcluster/v3/rest"
 	"github.com/canonical/microcluster/v3/rest/access"
+	"github.com/canonical/microcluster/v3/rest/response"
 )
 
 var sqlCmd = rest.Endpoint{
