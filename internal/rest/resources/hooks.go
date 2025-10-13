@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/canonical/lxd/lxd/response"
 	"github.com/gorilla/mux"
 
 	internalTypes "github.com/canonical/microcluster/v3/internal/rest/types"
 	internalState "github.com/canonical/microcluster/v3/internal/state"
 	"github.com/canonical/microcluster/v3/rest"
 	"github.com/canonical/microcluster/v3/rest/access"
+	"github.com/canonical/microcluster/v3/rest/response"
 	"github.com/canonical/microcluster/v3/rest/types"
 	"github.com/canonical/microcluster/v3/state"
 )

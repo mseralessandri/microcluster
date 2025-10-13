@@ -4,8 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/canonical/lxd/lxd/response"
-
+	"github.com/canonical/microcluster/v3/rest/response"
 	"github.com/canonical/microcluster/v3/rest/types"
 	"github.com/canonical/microcluster/v3/state"
 )

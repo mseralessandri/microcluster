@@ -16,7 +16,6 @@ import (
 	"github.com/canonical/go-dqlite/v3/driver"
 	"github.com/canonical/lxd/lxd/db/schema"
 	"github.com/canonical/lxd/lxd/request"
-	"github.com/canonical/lxd/lxd/response"
 	"github.com/canonical/lxd/lxd/util"
 	"github.com/canonical/lxd/shared"
 	"github.com/canonical/lxd/shared/api"
@@ -41,6 +40,7 @@ import (
 	"github.com/canonical/microcluster/v3/internal/trust"
 	"github.com/canonical/microcluster/v3/internal/utils"
 	"github.com/canonical/microcluster/v3/rest"
+	"github.com/canonical/microcluster/v3/rest/response"
 	"github.com/canonical/microcluster/v3/rest/types"
 	"github.com/canonical/microcluster/v3/state"
 )
@@ -251,7 +251,7 @@ func (d *Daemon) init(listenAddress string, socketGroup string, heartbeatInterva
 	// Those need to be set proactively as they aren't anymore set by default.
 	// See https://github.com/canonical/lxd/pull/14408.
 	// Always set debug to false as this is the same behavior as if the mappings got registered in the upstream package.
-	response.Init(false, map[int][]error{
+	response.Init(map[int][]error{
 		http.StatusConflict:           {sqlite3.ErrConstraintUnique},
 		http.StatusServiceUnavailable: {driver.ErrNoAvailableLeader},
 	})

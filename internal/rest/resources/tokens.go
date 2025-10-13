@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/canonical/lxd/lxd/response"
 	"github.com/canonical/lxd/shared"
 	"github.com/canonical/lxd/shared/logger"
 	"github.com/gorilla/mux"
@@ -20,6 +19,7 @@ import (
 	"github.com/canonical/microcluster/v3/internal/utils"
 	"github.com/canonical/microcluster/v3/rest"
 	"github.com/canonical/microcluster/v3/rest/access"
+	"github.com/canonical/microcluster/v3/rest/response"
 	"github.com/canonical/microcluster/v3/rest/types"
 )
 

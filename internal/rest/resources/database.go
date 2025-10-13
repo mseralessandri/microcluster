@@ -5,10 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/canonical/lxd/lxd/response"
-
 	"github.com/canonical/microcluster/v3/internal/state"
 	"github.com/canonical/microcluster/v3/rest"
+	"github.com/canonical/microcluster/v3/rest/response"
 )
 
 var databaseCmd = rest.Endpoint{
