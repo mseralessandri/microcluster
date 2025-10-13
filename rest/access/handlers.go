@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/canonical/lxd/lxd/response"
 	"github.com/canonical/lxd/lxd/util"
 	"github.com/canonical/lxd/shared/logger"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/canonical/microcluster/v3/internal/rest/access"
 	"github.com/canonical/microcluster/v3/internal/rest/client"
 	internalState "github.com/canonical/microcluster/v3/internal/state"
+	"github.com/canonical/microcluster/v3/rest/response"
 	"github.com/canonical/microcluster/v3/rest/types"
 	"github.com/canonical/microcluster/v3/state"
 )
