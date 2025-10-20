@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/canonical/lxd/lxd/endpoints/listeners"
 	"github.com/canonical/lxd/lxd/util"
 	"github.com/canonical/lxd/shared"
 	"github.com/canonical/lxd/shared/api"
@@ -74,14 +73,15 @@ func (n *Network) Listen() error {
 		return fmt.Errorf("Failed to listen on https socket: %w", err)
 	}
 
-	n.listener = listeners.NewFancyTLSListener(listener, n.cert)
+	// Use the mutableTLSListener that wraps connections at Accept time
+	n.listener = newMutableTLSListener(listener, n.cert)
 
 	return nil
 }
 
 // UpdateTLS updates the TLS configuration of the network listener.
 func (n *Network) UpdateTLS(cert *shared.CertInfo) {
-	l, ok := n.listener.(*listeners.FancyTLSListener)
+	l, ok := n.listener.(*mutableTLSListener)
 	if ok {
 		n.certMu.Lock()
 		n.cert = cert
